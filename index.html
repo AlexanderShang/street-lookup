@@ -96,16 +96,13 @@
       </footer>
     </div>
 
-    <script>
-      window.AMAP_CONFIG = {
-        webKey: "3adde9a29c5e3f2482f52b6a320423c5",
+    <script src="https://webapi.amap.com/loader.js"></script>
+    <script type="text/javascript">
+      // 按高德官方推荐方式配置 JS 安全密钥
+      window._AMapSecurityConfig = {
         securityJsCode: "ed2bdf69fa5c9278662ea8d7500a29c1",
       };
-      window._AMapSecurityConfig = {
-        securityJsCode: window.AMAP_CONFIG.securityJsCode,
-      };
     </script>
-    <script src="https://webapi.amap.com/maps?v=2.0&key=3adde9a29c5e3f2482f52b6a320423c5"></script>
     <script src="./main.js"></script>
   </body>
 </html>

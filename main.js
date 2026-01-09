@@ -47,38 +47,41 @@ function extractAddressSegment(raw) {
   return longest;
 }
 
-// 使用高德 JS SDK 的 Geocoder，而不是直接请求 Web 服务接口
+// 使用高德官方 loader.js + JS SDK 的 Geocoder
 let geocoderPromise = null;
 
 function getGeocoder() {
   if (geocoderPromise) return geocoderPromise;
 
-  geocoderPromise = new Promise((resolve, reject) => {
-    if (!window.AMap) {
-      reject(new Error("高德 JS API 尚未加载，请稍后再试。"));
-      return;
-    }
+  if (!window.AMapLoader) {
+    geocoderPromise = Promise.reject(
+      new Error("高德 Loader 尚未加载，请检查 loader.js 引用是否正确。")
+    );
+    return geocoderPromise;
+  }
 
-    // 按高德 v2.0 推荐方式异步加载插件
-    if (AMap.plugin) {
-      AMap.plugin("AMap.Geocoder", () => {
-        try {
-          const geocoder = new AMap.Geocoder({
-            city: "全国", // 默认全国
-          });
-          resolve(geocoder);
-        } catch (e) {
-          reject(
-            new Error(
-              "初始化地理编码服务失败，请检查高德 JS API Key 是否配置正确。"
-            )
-          );
-        }
-      });
-    } else {
-      reject(new Error("当前环境不支持高德地理编码插件。"));
-    }
-  });
+  geocoderPromise = window.AMapLoader.load({
+    key: "3adde9a29c5e3f2482f52b6a320423c5", // 你的 JSAPI Key
+    version: "2.0",
+    plugins: ["AMap.Geocoder"],
+  })
+    .then((AMap) => {
+      try {
+        return new AMap.Geocoder({
+          city: "全国", // 默认全国
+        });
+      } catch (e) {
+        throw new Error(
+          "初始化地理编码服务失败，请检查高德 JS API Key 与安全配置。"
+        );
+      }
+    })
+    .catch((e) => {
+      console.error(e);
+      throw new Error(
+        "加载高德 JS API 失败，请稍后重试或检查 Key / 安全密钥配置。"
+      );
+    });
 
   return geocoderPromise;
 }

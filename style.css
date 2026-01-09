@@ -1,0 +1,260 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background-color: #f5f7fa;
+  color: #1f2933;
+}
+
+body {
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  padding: 18px 16px 12px;
+  text-align: center;
+  background: linear-gradient(135deg, #0077ff, #4facfe);
+  color: #ffffff;
+}
+
+.app-header h1 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  letter-spacing: 0.06em;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 16px;
+  opacity: 0.95;
+}
+
+.app-main {
+  flex: 1;
+  padding: 12px 10px 20px;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.card {
+  background-color: #ffffff;
+  border-radius: 14px;
+  padding: 14px 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+}
+
+.card-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.card-tip {
+  margin: 0 0 10px;
+  font-size: 15px;
+  color: #52606d;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 16px;
+}
+
+.input-area {
+  width: 100%;
+  border-radius: 12px;
+  border: 2px solid #d9e2ec;
+  padding: 10px 12px;
+  font-size: 17px;
+  resize: vertical;
+  min-height: 120px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-area::placeholder {
+  color: #9fb3c8;
+}
+
+.input-area:focus {
+  border-color: #0077ff;
+  box-shadow: 0 0 0 2px rgba(0, 119, 255, 0.15);
+}
+
+.primary-btn {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px 16px;
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #0077ff, #00c6ff);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 119, 255, 0.35);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.2s ease;
+}
+
+.primary-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(0, 119, 255, 0.25);
+}
+
+.primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.status-message {
+  margin-top: 8px;
+  font-size: 16px;
+}
+
+.status-message.info {
+  color: #127fbf;
+}
+
+.status-message.success {
+  color: #048271;
+}
+
+.status-message.error {
+  color: #ba2525;
+}
+
+.result-block {
+  border-radius: 12px;
+  border: 1px solid #d9e2ec;
+  padding: 10px 10px 6px;
+  background-color: #f8fafc;
+}
+
+.result-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.result-label {
+  font-size: 15px;
+  color: #52606d;
+}
+
+.result-value {
+  font-size: 17px;
+  font-weight: 600;
+  color: #102a43;
+  word-break: break-all;
+}
+
+.placeholder {
+  color: #9fb3c8;
+  font-weight: 400;
+}
+
+.divider {
+  border-top: 1px dashed #d9e2ec;
+  margin: 6px 0;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.result-item {
+  padding: 6px 8px;
+  border-radius: 10px;
+  background-color: #ffffff;
+  border: 1px solid #d9e2ec;
+}
+
+.result-item-wide {
+  grid-column: span 2;
+}
+
+.help-list {
+  padding-left: 20px;
+  margin: 4px 0 0;
+  font-size: 16px;
+  color: #52606d;
+}
+
+.help-list li {
+  margin-bottom: 4px;
+}
+
+.app-footer {
+  text-align: center;
+  padding: 10px 8px 16px;
+  font-size: 14px;
+  color: #829ab1;
+}
+
+@media (min-width: 768px) {
+  .app-header {
+    padding: 24px 16px 18px;
+  }
+
+  .app-header h1 {
+    font-size: 30px;
+  }
+
+  .subtitle {
+    font-size: 17px;
+  }
+
+  .app-main {
+    padding: 16px 16px 24px;
+  }
+
+  .card {
+    padding: 16px 18px 20px;
+    margin-bottom: 16px;
+  }
+
+  .input-area {
+    min-height: 140px;
+    font-size: 18px;
+  }
+
+  .primary-btn {
+    width: 80%;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .result-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .result-item-wide {
+    grid-column: span 4;
+  }
+}
+

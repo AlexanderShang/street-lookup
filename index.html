@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <title>长者安心地址助手</title>
+    <meta
+      name="description"
+      content="为老年人设计的智能地址识别工具，自动从混合文本中识别并规范化地址信息。"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="app-header">
+        <h1>长者安心地址助手</h1>
+        <p class="subtitle">
+          把包含姓名、电话、地址的整段文字粘贴进来，一键智能识别标准地址
+        </p>
+      </header>
+
+      <main class="app-main">
+        <section class="card input-card">
+          <h2 class="card-title">第 1 步：粘贴或输入文字</h2>
+          <p class="card-tip">
+            例：张三 13812345678 上海市浦东新区世纪大道100号 3号楼402室
+          </p>
+          <label class="field-label" for="rawInput">混合文字内容</label>
+          <textarea
+            id="rawInput"
+            class="input-area"
+            rows="5"
+            placeholder="在这里粘贴微信、短信或图片识别后的整段文字&#10;系统会自动尝试找出里面的地址部分。"
+          ></textarea>
+          <button id="analyzeBtn" class="primary-btn">一键智能识别地址</button>
+          <div id="statusMessage" class="status-message" aria-live="polite"></div>
+        </section>
+
+        <section class="card result-card">
+          <h2 class="card-title">第 2 步：查看标准地址</h2>
+          <div class="result-block">
+            <div class="result-row">
+              <span class="result-label">识别出的地址原文</span>
+              <span id="detectedAddress" class="result-value placeholder">
+                还没有识别结果
+              </span>
+            </div>
+            <div class="divider"></div>
+            <div class="result-row">
+              <span class="result-label">标准完整地址</span>
+              <span id="formattedAddress" class="result-value placeholder">
+                等待识别...
+              </span>
+            </div>
+            <div class="divider"></div>
+            <div class="result-grid">
+              <div class="result-item">
+                <div class="result-label">省</div>
+                <div id="province" class="result-value placeholder">-</div>
+              </div>
+              <div class="result-item">
+                <div class="result-label">市</div>
+                <div id="city" class="result-value placeholder">-</div>
+              </div>
+              <div class="result-item">
+                <div class="result-label">区 / 县</div>
+                <div id="district" class="result-value placeholder">-</div>
+              </div>
+              <div class="result-item">
+                <div class="result-label">街道 / 乡镇</div>
+                <div id="township" class="result-value placeholder">-</div>
+              </div>
+              <div class="result-item result-item-wide">
+                <div class="result-label">小区 / 楼栋 / 门牌等详细</div>
+                <div id="neighborhood" class="result-value placeholder">-</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card help-card">
+          <h2 class="card-title">小提示（给家人 & 志愿者）</h2>
+          <ul class="help-list">
+            <li>**适合场景**：从微信聊天、短信、图片识别结果中复制整段文字。</li>
+            <li>**隐私安全**：本工具仅用于地址解析，不会把数据保存到服务器。</li>
+            <li>**识别不准怎么办**：可以删掉明显是姓名和电话的部分，再尝试一次。</li>
+          </ul>
+        </section>
+      </main>
+
+      <footer class="app-footer">
+        <p>基于高德地图地理编码服务 · 适配手机 & 平板 · 方便长者和家属使用</p>
+      </footer>
+    </div>
+
+    <script>
+      window.AMAP_CONFIG = {
+        webKey: "3adde9a29c5e3f2482f52b6a320423c5",
+        securityJsCode: "ed2bdf69fa5c9278662ea8d7500a29c1",
+      };
+      window._AMapSecurityConfig = {
+        securityJsCode: window.AMAP_CONFIG.securityJsCode,
+      };
+    </script>
+    <script src="https://webapi.amap.com/maps?v=2.0&key=3adde9a29c5e3f2482f52b6a320423c5"></script>
+    <script src="./main.js"></script>
+  </body>
+</html>
+

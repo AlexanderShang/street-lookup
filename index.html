@@ -4,290 +4,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小区街道办事处查询系统</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Street Smart 2.0</title>
+    <!-- New CSS File -->
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <div class="container">
+
+    <div class="app-container">
         <header>
-            <h1>🏘️ 街道办事处查询</h1>
-            <p class="subtitle">老人办事好帮手 · 查小区 知街道</p>
+            <h1>街办通 Smart 2.0</h1>
+            <p class="subtitle">更智能的社区街道查询助手</p>
         </header>
 
-        <main>
-            <div class="search-panel">
-                <div class="step-indicator">👉 第一步：复制收货人信息到这里</div>
-                <div class="form-group">
-                    <textarea id="address-input" class="smart-textarea large-text" rows="5"
-                        placeholder="例如：\n张三 13800000000\n北京市朝阳区三里屯街道12号楼"></textarea>
-                </div>
+        <section class="input-group">
+            <textarea id="addrInput" class="smart-textarea"
+                placeholder="在此粘贴收货地址信息...&#10;例如：北京市朝阳区三里屯街道12号楼 张三"></textarea>
+        </section>
 
-                <div class="action-area">
-                    <!-- Added onclick to guarantee execution -->
-                    <button id="smart-search-btn" class="search-btn large-text" onclick="handleSmartSearch()">
-                        🔍 智能识别并查询
-                    </button>
-                    <button id="clear-text-btn" class="secondary-btn" style="background:#bdbdbd; margin-top:10px;"
-                        onclick="resetForm()">
-                        清空内容
-                    </button>
-                </div>
+        <section class="action-bar">
+            <button id="evtSearch" class="btn-primary">
+                🔍 立即识别
+            </button>
+            <button id="evtClear" class="btn-secondary">
+                清空
+            </button>
+        </section>
 
-                <!-- Analysis Result Preview -->
-                <div id="analysis-result" class="analysis-card" style="display: none;">
-                    <h4>🤖 识别结果：</h4>
-                    <div class="tags-container">
-                        <span id="res-province" class="tag region">省份?</span>
-                    </div>
-                    <div class="detail-text">
-                        <strong>搜索关键词：</strong> <span id="res-keyword">--</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="results-section" id="results-section" style="display: none;" aria-live="polite">
-                <h2>查询结果</h2>
-                <div id="loading-spinner" class="spinner" style="display: none;">正在查询请稍候...</div>
-                <div id="results-container"></div>
-            </div>
-
-            <div class="info-section">
-                <h3>💡 使用帮助</h3>
-                <ul>
-                    <li>1. 将包含地址的信息（如：“姓名 电话 地址”）直接粘贴到上方输入框。</li>
-                    <li>2. 点击蓝色的“智能识别并查询”按钮。</li>
-                    <li>3. 系统将自动识别地址并显示对应的街道办事处。</li>
-                </ul>
-            </div>
-        </main>
+        <!-- Result Display Area -->
+        <section id="displayArea" class="results-area">
+            <!-- Dynamic Content Here -->
+        </section>
     </div>
 
-    <!-- 1. Security Config (MUST BE FIRST) -->
-    <script type="text/javascript">
-        window._AMapSecurityConfig = {
-            securityJsCode: 'ed2bdf69fa5c9278662ea8d7500a29c1',
-        };
+    <!-- Security Config -->
+    <script>
+        window._AMapSecurityConfig = { securityJsCode: 'ed2bdf69fa5c9278662ea8d7500a29c1' };
     </script>
 
-    <!-- 2. Load AMap Loader -->
+    <!-- Loader -->
     <script src="https://webapi.amap.com/loader.js"></script>
 
-    <!-- 3. Application Logic (Inline) -->
-    <script type="text/javascript">
-        // --- Configuration ---
-        const JS_API_KEY = '3adde9a29c5e3f2482f52b6a320423c5';
+    <!-- New Logic File -->
+    <script src="script.js"></script>
 
-        // --- State ---
-        let provinceList = [];
-        let placeSearch = null;
-        let geocoder = null;
-
-        // --- Initialization ---
-        // Run immediately to ensure global functions are available
-        console.log('Inline Script Loaded');
-
-        async function initApp() {
-            try {
-                // Load Admin Data
-                try {
-                    const res = await fetch('admin-data/province.json');
-                    provinceList = await res.json();
-                } catch (e) { console.warn('Local admin data missing', e); }
-
-                // Init Map
-                if (typeof AMapLoader === 'undefined') {
-                    alert('❌ 严重错误：地图加载器未加载，请检查网络。');
-                    return;
-                }
-
-                const AMap = await AMapLoader.load({
-                    key: JS_API_KEY,
-                    version: "2.0",
-                    plugins: ['AMap.PlaceSearch', 'AMap.Geocoder'],
-                });
-
-                placeSearch = new AMap.PlaceSearch({
-                    pageSize: 10,
-                    pageIndex: 1,
-                    extensions: 'all',
-                });
-
-                geocoder = new AMap.Geocoder({
-                    radius: 1000,
-                    extensions: "all"
-                });
-                console.log('AMap Services Initialized');
-
-            } catch (e) {
-                console.error('Init Error:', e);
-                alert('地图组件初始化失败: ' + e.message);
-            }
-        }
-
-        // --- Main Logic ---
-        // Exposed globally for onclick
-        window.handleSmartSearch = function () {
-            const addressInput = document.getElementById('address-input');
-            const text = addressInput.value.trim();
-
-            if (!text) { alert('请先输入地址'); return; }
-
-            setLoadingState(true);
-
-            // 1. Parse
-            const parsingObj = parseAddress(text);
-            updateAnalysisUI(parsingObj);
-
-            // 2. Check Init
-            if (!placeSearch || !geocoder) {
-                alert('地图组件正在加载中，请稍后再试...');
-                setLoadingState(false);
-                // Try init again just in case
-                initApp();
-                return;
-            }
-
-            if (parsingObj.province) {
-                placeSearch.setCity(parsingObj.province.name);
-            } else {
-                placeSearch.setCity('全国');
-            }
-
-            // Safety Timeout
-            const safetyTimer = setTimeout(() => {
-                if (document.getElementById('loading-spinner').style.display !== 'none') {
-                    alert('查询超时，请刷新重试。');
-                    setLoadingState(false);
-                }
-            }, 10000);
-
-            // 3. Search
-            placeSearch.search(parsingObj.keyword, (status, result) => {
-                clearTimeout(safetyTimer);
-                if (status === 'complete' && result.poiList && result.poiList.pois.length > 0) {
-                    processPoisAndDisplay(result.poiList.pois);
-                    setLoadingState(false);
-                } else {
-                    // Fallback to Geocoding
-                    geocoder.getLocation(parsingObj.keyword, (status, result) => {
-                        clearTimeout(safetyTimer);
-                        if (status === 'complete' && result.geocodes.length > 0) {
-                            const geo = result.geocodes[0];
-                            const mockPoi = {
-                                name: "📍 地址精确匹配",
-                                address: geo.formattedAddress,
-                                location: geo.location
-                            };
-                            processPoisAndDisplay([mockPoi]);
-                        } else {
-                            showNoResults();
-                        }
-                        setLoadingState(false);
-                    });
-                }
-            });
-        };
-
-        window.resetForm = function () {
-            document.getElementById('address-input').value = '';
-            document.getElementById('analysis-result').style.display = 'none';
-            document.getElementById('results-section').style.display = 'none';
-        };
-
-        // --- Helpers ---
-        async function processPoisAndDisplay(pois) {
-            const resultsContainer = document.getElementById('results-container');
-            const loadingSpinner = document.getElementById('loading-spinner');
-
-            const cardsHtml = await Promise.all(pois.map(async (poi) => {
-                const adminInfo = await getRegeoAdminInfo(poi.location);
-                return `
-                    <div class="result-card">
-                        <h3>${poi.name}</h3>
-                        <div class="info-item"><strong>📍 地址：</strong>${poi.address || poi.name}</div>
-                        <div class="info-item">
-                            <strong>🏛️ 街道办事处：</strong><br>
-                            <span class="highlight-street">${adminInfo.streetOffice}</span>
-                        </div>
-                        <div class="info-item" style="font-size:12px; color:#aaa; margin-top:5px;">
-                            行政区划代码：${adminInfo.adcode || '--'}
-                        </div>
-                    </div>
-                `;
-            }));
-
-            resultsContainer.innerHTML = cardsHtml.join('');
-            loadingSpinner.style.display = 'none';
-        }
-
-        function getRegeoAdminInfo(location) {
-            return new Promise((resolve) => {
-                geocoder.getAddress(location, (status, result) => {
-                    if (status === 'complete' && result.regeocode) {
-                        const comp = result.regeocode.addressComponent;
-                        let township = comp.township;
-                        let display = '暂无明确街道信息';
-                        if (township && typeof township === 'string' && township.trim()) {
-                            if (township.endsWith('办事处')) display = township;
-                            else if (township.endsWith('街道') || township.endsWith('镇') || township.endsWith('乡')) display = township + '办事处';
-                            else display = township + '街道办事处';
-                        } else {
-                            display = `${comp.district || ''} (未匹配)`;
-                        }
-                        resolve({ streetOffice: display, adcode: comp.adcode });
-                    } else {
-                        resolve({ streetOffice: '查询失败', adcode: '' });
-                    }
-                });
-            });
-        }
-
-        function parseAddress(text) {
-            let cleanText = text.replace(/(\+?86)?\s?1[3-9]\d{9}/g, ' ');
-            const noiseWords = ['收货人', '姓名', '电话', '手机', '联系方式', '地址', '所在地区', '详细地址', 'Default', '：', ':', ',', '，', '。'];
-            noiseWords.forEach(word => cleanText = cleanText.replaceAll(word, ' '));
-            cleanText = cleanText.replace(/\s+/g, ' ').trim();
-
-            let foundProvince = null;
-            for (const p of provinceList) {
-                if (cleanText.includes(p.name)) { foundProvince = p; break; }
-            }
-            return { province: foundProvince, keyword: cleanText };
-        }
-
-        function updateAnalysisUI(parsed) {
-            document.getElementById('analysis-result').style.display = 'block';
-            document.getElementById('res-province').innerText = parsed.province ? parsed.province.name : '自动范围';
-            document.getElementById('res-keyword').innerText = parsed.keyword;
-        }
-
-        function setLoadingState(isLoading) {
-            const btn = document.getElementById('smart-search-btn');
-            const spinner = document.getElementById('loading-spinner');
-            const section = document.getElementById('results-section');
-            const container = document.getElementById('results-container');
-
-            if (isLoading) {
-                btn.disabled = true;
-                btn.innerText = '🔍 查询中...';
-                section.style.display = 'block';
-                container.innerHTML = '';
-                spinner.style.display = 'block';
-            } else {
-                btn.disabled = false;
-                btn.innerText = '🔍 智能识别并查询';
-            }
-        }
-
-        function showNoResults() {
-            document.getElementById('results-container').innerHTML = '<div class="no-results">😕 未找到匹配结果</div>';
-        }
-
-        // Start App
-        initApp();
-
-    </script>
 </body>
 
 </html>

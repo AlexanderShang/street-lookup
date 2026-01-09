@@ -2,8 +2,8 @@
 // IMPORTANT: Go to https://console.amap.com/dev/key/app
 // 1. Create a Key for "Web端 (JS API)"
 // 2. Set the "Safe Domain" (Whiltelist) to: https://AlexanderShang.github.io
-const JS_API_KEY = 3adde9a29c5e3f2482f52b6a320423c5;
-const SECURITY_CODE = ed2bdf69fa5c9278662ea8d7500a29c1; // Only needed if you don't use proxy, but JS API loader handles key mainly.
+const JS_API_KEY = '3adde9a29c5e3f2482f52b6a320423c5';
+const SECURITY_CODE = 'ed2bdf69fa5c9278662ea8d7500a29c1'; // Only needed if you don't use proxy, but JS API loader handles key mainly.
 
 // Inject Security Code dynamically (must be before loader usage)
 window._AMapSecurityConfig = {
@@ -72,6 +72,7 @@ async function initAMap() {
 
     } catch (e) {
         console.error('AMap Loader Error:', e);
+        alert('❌ 地图组件加载失败\n\n请按 F12 打开控制台查看具体报错 (Console)。\n常见原因：Key类型错误(不是JS API) 或 域名白名单未配置。');
     }
 }
 

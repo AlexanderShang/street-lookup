@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小区街道办事处查询系统</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🏘️ 街道办事处查询</h1>
+            <p class="subtitle">老人办事好帮手 · 查小区 知街道</p>
+        </header>
+
+        <main>
+            <!-- API Key Input Section (Optional for User) -->
+            <div class="api-key-section">
+                <details>
+                    <summary>设置高德地图 Key (如查询失败请点击此处)</summary>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <input type="text" id="api-key-input" class="search-input" placeholder="输入高德地图 Web 服务 Key">
+                        <button id="save-key-btn" class="secondary-btn">保存 Key</button>
+                    </div>
+                </details>
+            </div>
+
+            <div class="search-panel">
+                <div class="step-indicator">👉 第一步：复制收货人信息到这里</div>
+                <div class="form-group">
+                    <textarea id="address-input" class="smart-textarea large-text" rows="5"
+                        placeholder="例如：\n张三 13800000000\n北京市朝阳区三里屯街道12号楼"></textarea>
+                </div>
+
+                <div class="action-area">
+                    <button id="smart-search-btn" class="search-btn large-text">
+                        🔍 智能识别并查询
+                    </button>
+                    <button id="clear-text-btn" class="secondary-btn" style="background:#bdbdbd; margin-top:10px;">
+                        清空内容
+                    </button>
+                </div>
+
+                <!-- Analysis Result Preview -->
+                <div id="analysis-result" class="analysis-card" style="display: none;">
+                    <h4>🤖 识别结果：</h4>
+                    <div class="tags-container">
+                        <span id="res-province" class="tag region">省份?</span>
+                        <span id="res-city" class="tag region">城市?</span>
+                        <span id="res-district" class="tag region">区县?</span>
+                    </div>
+                    <div class="detail-text">
+                        <strong>搜索关键词：</strong> <span id="res-keyword">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-section" id="results-section" style="display: none;" aria-live="polite">
+                <h2>查询结果</h2>
+                <div id="loading-spinner" class="spinner" style="display: none;">正在查询请稍候...</div>
+                <div id="results-container"></div>
+            </div>
+
+            <div class="info-section">
+                <h3>💡 使用帮助</h3>
+                <ul>
+                    <li>1. 将包含地址的信息（如：“姓名 电话 地址”）直接粘贴到上方输入框。</li>
+                    <li>2. 点击蓝色的“智能识别并查询”按钮。</li>
+                    <li>3. 系统将自动识别地址并显示对应的街道办事处。</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

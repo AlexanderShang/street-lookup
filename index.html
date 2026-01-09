@@ -16,9 +16,6 @@
         </header>
 
         <main>
-            <!-- API Key Input Section (Optional for User) -->
-
-
             <div class="search-panel">
                 <div class="step-indicator">👉 第一步：复制收货人信息到这里</div>
                 <div class="form-group">
@@ -40,8 +37,7 @@
                     <h4>🤖 识别结果：</h4>
                     <div class="tags-container">
                         <span id="res-province" class="tag region">省份?</span>
-                        <span id="res-city" class="tag region">城市?</span>
-                        <span id="res-district" class="tag region">区县?</span>
+                        <!-- City/District/Keyword updated via JS -->
                     </div>
                     <div class="detail-text">
                         <strong>搜索关键词：</strong> <span id="res-keyword">--</span>
@@ -66,9 +62,7 @@
         </main>
     </div>
 
-
-
-    <div id="container" style="display:none;"></div>
+    <!-- Security Config MUST be before Loader -->
     <script type="text/javascript">
         window._AMapSecurityConfig = {
             securityJsCode: 'ed2bdf69fa5c9278662ea8d7500a29c1',

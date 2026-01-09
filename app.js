@@ -1,165 +1,202 @@
-console.log('App.js is running...');
+console.log('App.js loaded successfully.');
 
-// Hardcoded Configuration for Public Deployment
-// IMPORTANT: Go to https://console.amap.com/dev/key/app
-// 1. Create a Key for "Web端 (JS API)"
-// 2. Set the "Safe Domain" (Whiltelist) to: https://AlexanderShang.github.io
+// --- Configuration ---
 const JS_API_KEY = '3adde9a29c5e3f2482f52b6a320423c5';
-const SECURITY_CODE = 'ed2bdf69fa5c9278662ea8d7500a29c1';
+// Security code is handled in index.html, but keeping reference here for clarity if needed.
 
-// ... (lines 8-49 skipped) ...
+// --- DOM Elements ---
+let addressInput, smartSearchBtn, clearTextBtn, resultsSection, resultsContainer, loadingSpinner, analysisResult, resProvince, resKeyword;
 
-async function initAMap() {
-    if (typeof AMapLoader === 'undefined') {
-        alert('❌ 严重错误：地图加载器(AMapLoader)未加载。\n请检查网络或广告拦截插件。');
+// --- State ---
+let provinceList = [];
+let placeSearch = null;
+let geocoder = null;
+
+// --- Initialization ---
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Ready. Initializing...');
+
+    // 1. Bind Elements
+    addressInput = document.getElementById('address-input');
+    smartSearchBtn = document.getElementById('smart-search-btn');
+    clearTextBtn = document.getElementById('clear-text-btn');
+    resultsSection = document.getElementById('results-section');
+    resultsContainer = document.getElementById('results-container');
+    loadingSpinner = document.getElementById('loading-spinner');
+    analysisResult = document.getElementById('analysis-result');
+    resProvince = document.getElementById('res-province');
+    resKeyword = document.getElementById('res-keyword');
+
+    if (!addressInput || !smartSearchBtn) {
+        alert('❌ 页面元素加载失败，请刷新重试。');
         return;
     }
 
+    // 2. Bind Events
+    smartSearchBtn.addEventListener('click', handleSmartSearch);
+    clearTextBtn.addEventListener('click', resetForm);
+
+    // 3. Load Data & Map
+    initApp();
+});
+
+async function initApp() {
     try {
-        const AMap = await AMapLoader.load({
-            key: JS_API_KEY,
-            version: "2.0",
-            plugins: ['AMap.PlaceSearch', 'AMap.Geocoder'],
-        });
-
-        placeSearch = new AMap.PlaceSearch({
-            pageSize: 10, // Top 10 results
-            pageIndex: 1,
-            extensions: 'all',
-        });
-
-        geocoder = new AMap.Geocoder({
-            radius: 1000,
-            extensions: "all"
-        });
-
+        await loadAdminData();
+        await initAMap();
+        console.log('App initialization complete.');
     } catch (e) {
-        console.error('AMap Loader Error:', e);
-        alert('❌ 地图组件加载失败\n请按 F12 查看控制台。\n可能原因：Key/域名配置错误。');
+        console.error('Init Error:', e);
+        alert('❌ 初始化失败，请检查网络。\n详细错误请按F12查看控制台。');
     }
 }
 
-// --- HYBRID WORKFLOW: Find Place (Coordinate) -> Query Admin (Regeo) ---
+async function loadAdminData() {
+    try {
+        const res = await fetch('admin-data/province.json');
+        provinceList = await res.json();
+    } catch (e) { console.warn('Local admin data missing', e); }
+}
+
+async function initAMap() {
+    if (typeof AMapLoader === 'undefined') {
+        throw new Error('AMapLoader is undefined. Script not loaded.');
+    }
+
+    const AMap = await AMapLoader.load({
+        key: JS_API_KEY,
+        version: "2.0",
+        plugins: ['AMap.PlaceSearch', 'AMap.Geocoder'],
+    });
+
+    placeSearch = new AMap.PlaceSearch({
+        pageSize: 10,
+        pageIndex: 1,
+        extensions: 'all',
+    });
+
+    geocoder = new AMap.Geocoder({
+        radius: 1000, // Search radius for Regeo
+        extensions: "all"
+    });
+}
+
+// --- Main Logic: Hybrid Search ---
 async function handleSmartSearch() {
     const text = addressInput.value.trim();
     if (!text) { alert('请先输入地址'); return; }
 
-    // UI Update
-    smartSearchBtn.disabled = true;
-    smartSearchBtn.innerText = '🔍 查询中...';
-    resultsSection.style.display = 'block';
-    resultsContainer.innerHTML = '';
-    loadingSpinner.style.display = 'block';
+    // UI Loading State
+    setLoadingState(true);
 
-    // Parse
-    const { province, keyword } = parseAddress(text);
+    // 1. Parse Text
+    const parsingObj = parseAddress(text);
+    updateAnalysisUI(parsingObj);
 
-    analysisResult.style.display = 'block';
-    resProvince.textContent = province ? province.name : '自动范围';
-    resProvince.style.display = 'inline-block';
-    resKeyword.textContent = keyword;
-
+    // 2. Map Search
     if (!placeSearch || !geocoder) {
-        alert('地图组件未初始化');
-        resetUI();
+        alert('地图组件尚未就绪，请稍候再试或刷新。');
+        setLoadingState(false);
         return;
     }
 
-    // Set City for better accuracy
-    if (province) {
-        placeSearch.setCity(province.name);
+    // Contextualize Search
+    if (parsingObj.province) {
+        placeSearch.setCity(parsingObj.province.name);
     } else {
         placeSearch.setCity('全国');
     }
 
     // Safety Timeout
-    const safetyTimeout = setTimeout(() => {
-        if (smartSearchBtn.disabled) {
-            console.warn('Search timed out');
-            alert('查询超时，请检查网络或Key配置。');
-            resetUI();
+    const safetyTimer = setTimeout(() => {
+        if (loadingSpinner.style.display !== 'none') {
+            console.warn('Search Timed Out');
+            alert('❌ 查询超时。\n请检查您的网络，或确认Key是否配置了正确的域名白名单。');
+            setLoadingState(false);
         }
-    }, 15000);
+    }, 12000); // 12 seconds
 
-    // Step 1: Place Search (Find Coordinates of Community/Building)
-    placeSearch.search(keyword, async (status, result) => {
-        clearTimeout(safetyTimeout);
+    // Strategy A: POI Search (Find "Place")
+    placeSearch.search(parsingObj.keyword, async (status, result) => {
+        clearTimeout(safetyTimer);
+        console.log('POI Search Result:', status, result);
 
         if (status === 'complete' && result.poiList && result.poiList.pois.length > 0) {
-            // Found POIs
-            await processAndDisplayResults(result.poiList.pois);
-            resetUI();
+            // Success A
+            await processPoisAndDisplay(result.poiList.pois);
+            setLoadingState(false);
         } else {
-            // POI Failed -> Try Forward Geocoding (Address Search)
-            console.log('POI Search failed, trying Geocoding...');
-            geocoder.getLocation(keyword, async (status, result) => {
-                clearTimeout(safetyTimeout);
-                if (status === 'complete' && result.geocodes && result.geocodes.length > 0) {
-                    const geo = result.geocodes[0];
-                    // Verify Admin Region for this coordinate too
-                    const adminResult = await getAdminInfo(geo.location);
-
-                    const mockPoi = {
-                        name: "📍 地址匹配结果",
-                        address: geo.formattedAddress,
-                        streetOffice: adminResult.streetOffice, // Use the verified info
-                        adcode: adminResult.adcode
-                    };
-                    renderResultCard(mockPoi);
-                } else {
-                    showNoResults();
-                }
-                resetUI();
-            });
+            // Fail A -> Strategy B: Geocoding (Find "Address")
+            console.log('POI failed. Switching to Geocoding...');
+            doGeocodeSearch(parsingObj.keyword, safetyTimer);
         }
     });
 }
 
-// Step 2: Parallel Regeo for POIs
-async function processAndDisplayResults(pois) {
-    const combinedResults = await Promise.all(pois.map(async (poi) => {
-        // Crucial: Ignore POI's own weak admin info. Re-query using its location.
-        const adminInfo = await getAdminInfo(poi.location);
+function doGeocodeSearch(keyword, timerArg) {
+    geocoder.getLocation(keyword, async (status, result) => {
+        if (timerArg) clearTimeout(timerArg);
+        console.log('Geocode Result:', status, result);
 
-        return {
-            name: poi.name,
-            address: poi.address,
-            streetOffice: adminInfo.streetOffice,
-            adcode: adminInfo.adcode
-        };
-    }));
-
-    // Render all
-    if (combinedResults.length > 0) {
-        resultsContainer.innerHTML = combinedResults.map(item => createCardHTML(item)).join('');
-        loadingSpinner.style.display = 'none';
-    } else {
-        showNoResults();
-    }
+        if (status === 'complete' && result.geocodes.length > 0) {
+            // Success B
+            const geo = result.geocodes[0];
+            const mockPoi = {
+                name: "📍 地址精确匹配",
+                address: geo.formattedAddress,
+                location: geo.location
+            };
+            await processPoisAndDisplay([mockPoi]);
+        } else {
+            // Fail B -> No Results
+            showNoResults();
+        }
+        setLoadingState(false);
+    });
 }
 
-// Helper: Coordinate -> Admin Info
-function getAdminInfo(location) {
+// Core: Coordinates -> Administrative Info (Regeo)
+async function processPoisAndDisplay(pois) {
+    if (!pois || pois.length === 0) return;
+
+    const cardsHtml = await Promise.all(pois.map(async (poi) => {
+        // Always verify true admin info using Regeo
+        const adminInfo = await getRegeoAdminInfo(poi.location);
+
+        return `
+            <div class="result-card">
+                <h3>${poi.name}</h3>
+                <div class="info-item"><strong>📍 地址：</strong>${poi.address || poi.name}</div>
+                <div class="info-item">
+                    <strong>🏛️ 街道办事处：</strong><br>
+                    <span class="highlight-street">${adminInfo.streetOffice}</span>
+                </div>
+                <div class="info-item" style="font-size:12px; color:#aaa; margin-top:5px;">
+                    行政区划代码：${adminInfo.adcode || '--'}
+                </div>
+            </div>
+        `;
+    }));
+
+    resultsContainer.innerHTML = cardsHtml.join('');
+}
+
+function getRegeoAdminInfo(location) {
     return new Promise((resolve) => {
         geocoder.getAddress(location, (status, result) => {
             if (status === 'complete' && result.regeocode) {
                 const comp = result.regeocode.addressComponent;
                 let township = comp.township;
-
-                // Format Street Office Name
                 let display = '暂无明确街道信息';
-                if (township && typeof township === 'string' && township.trim() !== '') {
+
+                if (township && typeof township === 'string' && township.trim()) {
                     if (township.endsWith('办事处')) display = township;
                     else if (township.endsWith('街道') || township.endsWith('镇') || township.endsWith('乡')) display = township + '办事处';
                     else display = township + '街道办事处';
                 } else {
-                    display = `${comp.district} (未匹配到街道)`;
+                    display = `${comp.district || ''} (未匹配)`;
                 }
-
-                resolve({
-                    streetOffice: display,
-                    adcode: comp.adcode
-                });
+                resolve({ streetOffice: display, adcode: comp.adcode });
             } else {
                 resolve({ streetOffice: '查询失败', adcode: '' });
             }
@@ -167,63 +204,46 @@ function getAdminInfo(location) {
     });
 }
 
-function createCardHTML(item) {
-    return `
-        <div class="result-card">
-            <h3>${item.name}</h3>
-            <div class="info-item"><strong>📍 地址：</strong>${item.address || item.name}</div>
-            <div class="info-item">
-                <strong>🏛️ 街道办事处：</strong><br>
-                <span class="highlight-street">${item.streetOffice}</span>
-            </div>
-            <div class="info-item" style="font-size:12px; color:#aaa; margin-top:5px;">
-                行政区划代码：${item.adcode || '--'}
-            </div>
-        </div>
-    `;
-}
-
-function renderResultCard(item) {
-    loadingSpinner.style.display = 'none';
-    resultsContainer.innerHTML = createCardHTML(item);
-}
-
-
+// --- Helpers ---
 function parseAddress(text) {
     let cleanText = text.replace(/(\+?86)?\s?1[3-9]\d{9}/g, ' ');
     const noiseWords = ['收货人', '姓名', '电话', '手机', '联系方式', '地址', '所在地区', '详细地址', 'Default', '：', ':', ',', '，', '。'];
     noiseWords.forEach(word => cleanText = cleanText.replaceAll(word, ' '));
+    cleanText = cleanText.replace(/\s+/g, ' ').trim();
 
     let foundProvince = null;
     for (const p of provinceList) {
         if (cleanText.includes(p.name)) { foundProvince = p; break; }
     }
+    return { province: foundProvince, keyword: cleanText };
+}
 
-    return {
-        province: foundProvince,
-        keyword: cleanText.replace(/\s+/g, ' ').trim()
-    };
+function updateAnalysisUI(parsed) {
+    analysisResult.style.display = 'block';
+    resProvince.innerText = parsed.province ? parsed.province.name : '自动范围';
+    resKeyword.innerText = parsed.keyword;
+}
+
+function setLoadingState(isLoading) {
+    if (isLoading) {
+        smartSearchBtn.disabled = true;
+        smartSearchBtn.innerText = '🔍 查询中...';
+        resultsSection.style.display = 'block';
+        resultsContainer.innerHTML = '';
+        loadingSpinner.style.display = 'block';
+    } else {
+        smartSearchBtn.disabled = false;
+        smartSearchBtn.innerText = '🔍 智能识别并查询';
+        loadingSpinner.style.display = 'none';
+    }
 }
 
 function showNoResults() {
-    loadingSpinner.style.display = 'none';
-    resultsContainer.innerHTML = '<div class="no-results">😕 未找到匹配结果</div>';
+    resultsContainer.innerHTML = '<div class="no-results">😕 未找到匹配结果，请检查地址是否准确</div>';
 }
 
-function resetUI() {
-    smartSearchBtn.disabled = false;
-    smartSearchBtn.innerText = '🔍 智能识别并查询';
-}
-
-// Event Listeners
-smartSearchBtn.addEventListener('click', handleSmartSearch);
-clearTextBtn.addEventListener('click', () => {
+function resetForm() {
     addressInput.value = '';
     analysisResult.style.display = 'none';
     resultsSection.style.display = 'none';
-});
-
-// Start when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    initApp();
-});
+}

@@ -5,10 +5,10 @@
 const JS_API_KEY = '3adde9a29c5e3f2482f52b6a320423c5';
 const SECURITY_CODE = 'ed2bdf69fa5c9278662ea8d7500a29c1';
 
-// Inject Security Code
-window._AMapSecurityConfig = {
-    securityJsCode: SECURITY_CODE,
-};
+// Security Config moved to index.html to ensure load order
+// window._AMapSecurityConfig = {
+//    securityJsCode: SECURITY_CODE,
+// };
 
 // DOM Elements
 const addressInput = document.getElementById('address-input');

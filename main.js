@@ -47,27 +47,62 @@ function extractAddressSegment(raw) {
   return longest;
 }
 
+// 使用高德 JS SDK 的 Geocoder，而不是直接请求 Web 服务接口
+let geocoderPromise = null;
+
+function getGeocoder() {
+  if (geocoderPromise) return geocoderPromise;
+
+  geocoderPromise = new Promise((resolve, reject) => {
+    if (!window.AMap) {
+      reject(new Error("高德 JS API 尚未加载，请稍后再试。"));
+      return;
+    }
+
+    // 按高德 v2.0 推荐方式异步加载插件
+    if (AMap.plugin) {
+      AMap.plugin("AMap.Geocoder", () => {
+        try {
+          const geocoder = new AMap.Geocoder({
+            city: "全国", // 默认全国
+          });
+          resolve(geocoder);
+        } catch (e) {
+          reject(
+            new Error(
+              "初始化地理编码服务失败，请检查高德 JS API Key 是否配置正确。"
+            )
+          );
+        }
+      });
+    } else {
+      reject(new Error("当前环境不支持高德地理编码插件。"));
+    }
+  });
+
+  return geocoderPromise;
+}
+
 async function geocodeByAmap(address) {
-  const key = (window.AMAP_CONFIG && window.AMAP_CONFIG.webKey) || "";
-  if (!key) {
-    throw new Error("缺少高德地图 Key 配置");
-  }
+  const geocoder = await getGeocoder();
 
-  const url =
-    "https://restapi.amap.com/v3/geocode/geo?key=" +
-    encodeURIComponent(key) +
-    "&address=" +
-    encodeURIComponent(address);
-
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error("网络请求失败，请稍后再试");
-  }
-  const data = await res.json();
-  if (data.status !== "1" || !data.geocodes || data.geocodes.length === 0) {
-    throw new Error(data.info || "未能找到对应的地址，请尝试简化或修改后再试");
-  }
-  return data.geocodes[0];
+  return new Promise((resolve, reject) => {
+    geocoder.getLocation(address, (status, result) => {
+      if (
+        status === "complete" &&
+        result &&
+        result.geocodes &&
+        result.geocodes.length > 0
+      ) {
+        resolve(result.geocodes[0]);
+      } else {
+        const msg =
+          (result && result.info) ||
+          "未能找到对应的地址，请尝试简化或修改后再试。";
+        reject(new Error(msg));
+      }
+    });
+  });
 }
 
 function splitDetailAddress(geo) {

@@ -92,9 +92,21 @@ async function handleSmartSearch() {
         return;
     }
 
+    // Safety Timeout (10s) to prevent infinite loading
+    const safetyTimeout = setTimeout(() => {
+        if (smartSearchBtn.disabled) {
+            console.warn('Search timed out');
+            alert('查询超时，请检查网络或Key配置。');
+            resetUI();
+        }
+    }, 10000);
+
     // Step 1: Forward Geocoding (Address -> Lat/Lon)
     // We strictly use the "Address" to find the "Administrative Coordinate"
+    console.log(`Starting Geocode search for: ${keyword}`);
     geocoder.getLocation(keyword, async (status, result) => {
+        clearTimeout(safetyTimeout); // Clear timeout on response
+        console.log('Geocode callback:', status, result);
         if (status === 'complete' && result.geocodes.length > 0) {
             // We take the best match
             const geoResult = result.geocodes[0];
@@ -105,6 +117,7 @@ async function handleSmartSearch() {
             performRegeoAndDisplay(location, geoResult.formattedAddress);
 
         } else {
+            console.warn('Geocode failed or empty');
             showNoResults();
             resetUI();
         }
@@ -112,7 +125,9 @@ async function handleSmartSearch() {
 }
 
 function performRegeoAndDisplay(location, formattedAddress) {
+    console.log('Starting Regeo for location:', location);
     geocoder.getAddress(location, (status, result) => {
+        console.log('Regeo callback:', status, result);
         resetUI();
         loadingSpinner.style.display = 'none';
 

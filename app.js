@@ -1,3 +1,5 @@
+console.log('App.js is running...');
+
 // Hardcoded Configuration for Public Deployment
 // IMPORTANT: Go to https://console.amap.com/dev/key/app
 // 1. Create a Key for "Web端 (JS API)"
@@ -5,49 +7,13 @@
 const JS_API_KEY = '3adde9a29c5e3f2482f52b6a320423c5';
 const SECURITY_CODE = 'ed2bdf69fa5c9278662ea8d7500a29c1';
 
-// Security Config moved to index.html to ensure load order
-// window._AMapSecurityConfig = {
-//    securityJsCode: SECURITY_CODE,
-// };
-
-// DOM Elements
-const addressInput = document.getElementById('address-input');
-const smartSearchBtn = document.getElementById('smart-search-btn');
-const clearTextBtn = document.getElementById('clear-text-btn');
-const resultsSection = document.getElementById('results-section');
-const resultsContainer = document.getElementById('results-container');
-const loadingSpinner = document.getElementById('loading-spinner');
-const analysisResult = document.getElementById('analysis-result');
-const resProvince = document.getElementById('res-province');
-const resKeyword = document.getElementById('res-keyword');
-
-// Admin Data for parsing optimization
-let provinceList = [];
-
-async function initApp() {
-    try {
-        await loadAdminData();
-        await initAMap();
-        console.log('App Initialized (Hybrid Mode)');
-    } catch (e) {
-        console.error('Init Failed:', e);
-        alert('地图组件加载失败，请检查控制台报错。');
-    }
-}
-
-async function loadAdminData() {
-    try {
-        const res = await fetch('admin-data/province.json');
-        provinceList = await res.json();
-    } catch (e) { console.warn('Local admin data missing', e); }
-}
-
-// 2. Init AMap JS API (Hybrid: PlaceSearch + Geocoder)
-let placeSearch = null;
-let geocoder = null;
+// ... (lines 8-49 skipped) ...
 
 async function initAMap() {
-    if (typeof AMapLoader === 'undefined') return;
+    if (typeof AMapLoader === 'undefined') {
+        alert('❌ 严重错误：地图加载器(AMapLoader)未加载。\n请检查网络或广告拦截插件。');
+        return;
+    }
 
     try {
         const AMap = await AMapLoader.load({
@@ -257,4 +223,7 @@ clearTextBtn.addEventListener('click', () => {
     resultsSection.style.display = 'none';
 });
 
-initApp();
+// Start when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    initApp();
+});

@@ -1,0 +1,64 @@
+/* High‑contrast, large‑font style for elderly users */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #2c2c2c; /* dark background */
+  color: #ffffff;   /* white text */
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 20px;   /* base large font */
+  line-height: 1.5;
+}
+
+#app {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+h1 {
+  font-size: 2.2rem;
+  margin-bottom: 1.5rem;
+  color: #ffdd57; /* warm accent */
+}
+
+.selectors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 1.2rem;
+}
+
+select, button {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1.1rem;
+  border: 2px solid #555;
+  border-radius: 6px;
+  background: #444;
+  color: #fff;
+}
+
+select:focus, button:focus {
+  outline: 3px solid #ffdd57;
+  outline-offset: 2px;
+}
+
+button {
+  background: #ffdd57;
+  color: #2c2c2c;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #777;
+  cursor: not-allowed;
+}
+
+.result {
+  margin-top: 1.5rem;
+  font-size: 1.4rem;
+  color: #ffdd57;
+}

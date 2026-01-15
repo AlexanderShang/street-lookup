@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>街道办事处查询</title>
+    <link rel="stylesheet" href="style.css" />
+    <!-- 高德 JS SDK（不带 Key），在脚本中动态使用 -->
+    <script src="https://webapi.amap.com/maps?v=2.0&plugin=AMap.Geocoder"></script>
+</head>
+
+<body>
+    <div id="app">
+        <h1>街道办事处查询</h1>
+        <div class="selectors">
+            <select id="provinceSelect">
+                <option value="">请选择省份</option>
+            </select>
+            <select id="citySelect" disabled>
+                <option value="">请选择城市</option>
+            </select>
+            <select id="countySelect" disabled>
+                <option value="">请选择县区</option>
+            </select>
+            <select id="villageSelect" disabled>
+                <option value="">请选择乡镇/村</option>
+            </select>
+        </div>
+        <div class="raw-input">
+            <textarea id="rawInput" rows="4" placeholder="粘贴包含姓名、电话等信息的文本"
+                style="width:100%;font-size:1.1rem;padding:0.5rem;"></textarea>
+            <button id="extractBtn" style="margin-top:0.5rem;">提取地址并查询</button>
+        </div>
+        <button id="searchBtn" disabled>查询</button>
+        <div id="result" class="result"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
